@@ -35,4 +35,4 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-        exclude: package-lock\.json|uv\.lock
+        exclude: package-lock\.json|pnpm-lock\.yaml|uv\.lock

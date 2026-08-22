@@ -28,8 +28,8 @@
 # Instalar dependencias de Python con uv
 uv sync
 
-# Instalar dependencias del frontend web
-cd web && npm install && cd ..
+# Instalar dependencias del frontend web con pnpm
+cd web && pnpm install && cd ..
 ```
 
 ### 2. Configurar Servicios (`services.yaml`)
@@ -101,14 +101,14 @@ uv run state-panel daemon
 
 ```bash
 cd web
-npm run dev
+pnpm dev
 ```
 
 ### Compilar para Producción
 
 ```bash
 cd web
-npm run build
+pnpm build
 ```
 
 El build estático se generará en `web/dist/`, listo para desplegarse en **Cloudflare Pages**.
