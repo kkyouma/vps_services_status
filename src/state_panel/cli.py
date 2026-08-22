@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import UTC, datetime
+from pathlib import Path
 
 import typer
 from rich.console import Console
@@ -12,6 +13,7 @@ from rich.text import Text
 from state_panel.config import load_config
 from state_panel.engine import Engine
 from state_panel.probes.base import CheckResult
+from state_panel.server import start_server
 
 app = typer.Typer(
     name="state-panel",
@@ -244,6 +246,53 @@ def daemon(
         asyncio.run(_loop())
     except KeyboardInterrupt:
         console.print("\n[yellow]Daemon stopped by user.[/]")
+
+
+@app.command()
+def reset(
+    config_file: str | None = typer.Option(
+        None, "--config", "-c", help="Path to YAML config file"
+    ),
+) -> None:
+    """Reset the database and perform a fresh real check."""
+    config = load_config(config_file)
+    db_path = Path(config.settings.db_path)
+    if db_path.exists():
+        db_path.unlink()
+        console.print(f"[bold yellow]Removed database:[/] {db_path}")
+
+    engine = Engine(config)
+    with console.status("[bold green]Performing initial real health check...[/]"):
+        results, out_path = asyncio.run(engine.run_and_export())
+
+    console.print(
+        f"[bold green]✓[/] Fresh check completed for [bold]{len(results)}[/] services "
+        f"and saved to [bold cyan]{out_path}[/]"
+    )
+
+
+@app.command()
+def serve(
+    config_file: str | None = typer.Option(
+        None, "--config", "-c", help="Path to YAML config file"
+    ),
+    host: str = typer.Option("127.0.0.1", "--host", "-h", help="Host address to bind"),
+    port: int = typer.Option(8000, "--port", "-p", help="Port to bind"),
+) -> None:
+    """Start local web server with live check API and web UI."""
+    config = load_config(config_file)
+    interval = config.settings.refresh_interval_seconds
+    console.print(
+        f"\n[bold green]⚡ State Panel Live Server running at:[/] "
+        f"[bold cyan]http://{host}:{port}[/]"
+    )
+    console.print(f"[dim]• Real-time check API: http://{host}:{port}/api/check[/]")
+    console.print(f"[dim]• Auto-check interval: {interval}s[/]\n")
+
+    try:
+        start_server(config, host=host, port=port)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Server stopped by user.[/]")
 
 
 def main() -> None:

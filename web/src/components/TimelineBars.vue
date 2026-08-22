@@ -74,7 +74,8 @@ function handleMouseLeave() {
         {{ formatDate(hoveredDay.date) }}
       </div>
       <div class="text-[#a1a1aa] text-[11px] mt-0.5 flex items-center gap-2">
-        <span>{{ hoveredDay.uptime_percentage }}% uptime</span>
+        <span v-if="hoveredDay.status === 'nodata'" class="text-[#737169]">No checks recorded</span>
+        <span v-else>{{ hoveredDay.uptime_percentage }}% uptime</span>
         <span v-if="hoveredDay.avg_latency_ms > 0">• {{ hoveredDay.avg_latency_ms }} ms avg</span>
         <span v-if="hoveredDay.down_checks > 0" class="text-red-400 font-medium">
           • {{ hoveredDay.down_checks }} incidents

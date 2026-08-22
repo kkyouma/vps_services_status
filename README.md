@@ -83,13 +83,16 @@ uv run state-panel check
 # 2. Ver historial agregado de uptime (últimos 30 días)
 uv run state-panel history --days 30
 
-# 3. Generar datos y exportar a web/public/data/status.json
+# 3. Iniciar servidor web local con API en tiempo real y UI interactiva
+uv run state-panel serve --port 8000
+
+# 4. Generar datos y exportar a web/public/data/status.json para Cloudflare Pages
 uv run state-panel export
 
-# 4. Generar datos históricos simulados para previsualización inmediata
-uv run state-panel seed --days 30
+# 5. Reiniciar base de datos a estado limpio con chequeo real
+uv run state-panel reset
 
-# 5. Iniciar daemon en segundo plano (chequeo periódico)
+# 6. Iniciar daemon en segundo plano (chequeo periódico sin servidor web)
 uv run state-panel daemon
 ```
 
