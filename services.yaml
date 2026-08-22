@@ -18,14 +18,14 @@ ntfy:
   token: "${NTFY_TOKEN:-}"
   priority: 4
 
-# Monitored Services
+# Monitored Services (URLs are private and NEVER exported to public status.json)
 services:
   # --- VPS SERVICES ---
   - id: "outline"
     name: "Outline"
     category: "VPS Core"
     type: "http"
-    target: "${OUTLINE_URL:-https://mimamita.site}"
+    target: "${OUTLINE_URL:-https://outline.mimamita.site}"
     expected_status: 200
     timeout: 5.0
     description: "Internal Knowledge Base & Wiki"

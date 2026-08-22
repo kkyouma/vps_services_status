@@ -1,6 +1,8 @@
 """CLI interface for state-panel using Typer and Rich."""
 
 import asyncio
+import shutil
+import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -293,6 +295,49 @@ def serve(
         start_server(config, host=host, port=port)
     except KeyboardInterrupt:
         console.print("\n[yellow]Server stopped by user.[/]")
+
+
+@app.command()
+def deploy(
+    config_file: str | None = typer.Option(
+        None, "--config", "-c", help="Path to YAML config file"
+    ),
+    project_name: str = typer.Option(
+        "state-panel", "--project-name", "-p", help="Cloudflare Pages project name"
+    ),
+) -> None:
+    """Run checks, build web bundle, and deploy to Cloudflare Pages via Wrangler."""
+    config = load_config(config_file)
+    engine = Engine(config)
+
+    with console.status("[bold green]1/3 Running checks and exporting data...[/]"):
+        results, out_path = asyncio.run(engine.run_and_export())
+
+    console.print(f"[bold green]✓[/] Checked {len(results)} services -> {out_path}")
+
+    pnpm_bin = shutil.which("pnpm") or "pnpm"
+    with console.status("[bold green]2/3 Building frontend web bundle...[/]"):
+        ret = subprocess.run([pnpm_bin, "build"], cwd="web", check=False)  # noqa: S603
+        if ret.returncode != 0:
+            console.print("[bold red]Error building web bundle with pnpm build[/]")
+            raise typer.Exit(code=1)
+
+    console.print("[bold green]✓[/] Web bundle built in web/dist")
+    console.print(
+        f"[bold green]3/3 Deploying to Cloudflare Pages ({project_name})...[/]"
+    )
+    subprocess.run(  # noqa: S603
+        [
+            pnpm_bin,
+            "dlx",
+            "wrangler",
+            "pages",
+            "deploy",
+            "web/dist",
+            f"--project-name={project_name}",
+        ],
+        check=False,
+    )
 
 
 def main() -> None:
