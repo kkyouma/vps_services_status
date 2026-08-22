@@ -8,6 +8,18 @@ const isLoading = ref(false)
 const error = ref(null)
 let pollTimer = null
 
+// Canonical domain redirect guard
+if (
+  typeof window !== 'undefined' &&
+  window.location.hostname.endsWith('.pages.dev')
+) {
+  window.location.replace(
+    'https://status.mimamita.site' +
+      window.location.pathname +
+      window.location.search
+  )
+}
+
 // Fallback initial data in case status.json hasn't been generated yet
 const defaultFallback = {
   title: 'System Status',
