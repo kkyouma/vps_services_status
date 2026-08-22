@@ -51,6 +51,8 @@ class Exporter:
                     "current_status": res.status if res else "unknown",
                     "current_latency_ms": res.latency_ms if res else 0.0,
                     "current_message": res.message if res else "",
+                    "uptime_percentage": history_data["uptime_percentage"],
+                    "uptime_30d_percentage": history_data["uptime_30d_percentage"],
                     "uptime_90d_percentage": history_data["uptime_90d_percentage"],
                     "history": history_data["history"],
                 }

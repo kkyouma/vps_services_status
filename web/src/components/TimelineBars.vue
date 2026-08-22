@@ -83,21 +83,21 @@ function handleMouseLeave() {
       <div class="tooltip-arrow"></div>
     </div>
 
-    <!-- 90 Bars Container -->
-    <div class="flex items-center justify-between gap-[2px] h-9 w-full my-3">
+    <!-- 30 Bars Container -->
+    <div class="flex items-center justify-between gap-[3px] h-9 w-full my-3">
       <div
         v-for="(day, index) in history"
         :key="day.date || index"
-        class="timeline-bar flex-1 h-full rounded-[1px] cursor-pointer"
+        class="timeline-bar flex-1 h-full rounded-[2px] cursor-pointer"
         :class="getBarColor(day.status)"
         @mouseenter="handleMouseEnter(day, $event)"
         @mouseleave="handleMouseLeave"
       ></div>
     </div>
 
-    <!-- Bottom Scale (90 days ago --- Uptime % --- Today) -->
+    <!-- Bottom Scale (30 days ago --- Uptime % --- Today) -->
     <div class="flex items-center justify-between text-xs text-[#8a8880] pt-1">
-      <span class="text-[11px] text-[#737169]">90 days ago</span>
+      <span class="text-[11px] text-[#737169]">30 days ago</span>
       <div class="flex-1 mx-3 flex items-center justify-center relative">
         <div class="w-full border-t border-[#2a2824]"></div>
         <span class="absolute bg-[#181715] px-3 text-[11px] text-[#9c9990] font-mono">

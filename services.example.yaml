@@ -6,7 +6,7 @@ settings:
   title: "System Status"
   description: "Live operational status of VPS and Cloud infrastructure"
   refresh_interval_seconds: 60
-  history_days: 90
+  history_days: 30
   output_dir: "web/public/data"
   db_path: "state_panel.db"
 

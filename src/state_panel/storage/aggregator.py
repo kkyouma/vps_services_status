@@ -62,8 +62,8 @@ class Aggregator:
     def __init__(self, db: Database) -> None:
         self.db = db
 
-    def get_service_history(self, service_id: str, days: int = 90) -> dict[str, Any]:
-        """Generate 90-day daily breakdown and total uptime for a service."""
+    def get_service_history(self, service_id: str, days: int = 30) -> dict[str, Any]:
+        """Generate daily breakdown and total uptime for a service."""
         now = datetime.now(UTC)
         start_date = (now - timedelta(days=days - 1)).date()
 
@@ -99,8 +99,8 @@ class Aggregator:
                 else:
                     metric.down_checks += 1
 
-        # Calculate overall 90-day uptime
-        uptime_90d = (
+        # Calculate overall uptime
+        uptime_pct = (
             round((total_score_all / total_checks_all) * 100, 2)
             if total_checks_all > 0
             else 100.0
@@ -110,7 +110,10 @@ class Aggregator:
 
         return {
             "service_id": service_id,
-            "uptime_90d_percentage": uptime_90d,
+            "uptime_percentage": uptime_pct,
+            "uptime_30d_percentage": uptime_pct,
+            "uptime_90d_percentage": uptime_pct,
+            "total_checks": total_checks_all,
             "total_checks_90d": total_checks_all,
             "history": history_list,
         }

@@ -21,14 +21,15 @@ const defaultFallback = {
       category: 'VPS Core',
       description: 'AI Agent Gateway & Workflow Dispatcher',
       current_status: 'operational',
+      uptime_30d_percentage: 99.85,
       uptime_90d_percentage: 99.85,
-      history: Array.from({ length: 90 }, (_, i) => ({
-        date: new Date(Date.now() - (89 - i) * 86400000).toISOString().split('T')[0],
-        status: i === 42 ? 'degraded' : (i === 12 ? 'down' : 'operational'),
-        uptime_percentage: i === 12 ? 96.0 : 100.0,
+      history: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
+        status: i === 14 ? 'degraded' : (i === 4 ? 'down' : 'operational'),
+        uptime_percentage: i === 4 ? 96.0 : 100.0,
         avg_latency_ms: 35,
         total_checks: 24,
-        down_checks: i === 12 ? 1 : 0
+        down_checks: i === 4 ? 1 : 0
       }))
     },
     {
@@ -37,10 +38,11 @@ const defaultFallback = {
       category: 'VPS Core',
       description: 'Customer Relationship Management System',
       current_status: 'operational',
+      uptime_30d_percentage: 99.92,
       uptime_90d_percentage: 99.92,
-      history: Array.from({ length: 90 }, (_, i) => ({
-        date: new Date(Date.now() - (89 - i) * 86400000).toISOString().split('T')[0],
-        status: i === 65 ? 'degraded' : 'operational',
+      history: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
+        status: i === 21 ? 'degraded' : 'operational',
         uptime_percentage: 100.0,
         avg_latency_ms: 28,
         total_checks: 24,
@@ -53,9 +55,10 @@ const defaultFallback = {
       category: 'VPS Core',
       description: 'Internal Knowledge Base & Wiki',
       current_status: 'operational',
+      uptime_30d_percentage: 99.98,
       uptime_90d_percentage: 99.98,
-      history: Array.from({ length: 90 }, (_, i) => ({
-        date: new Date(Date.now() - (89 - i) * 86400000).toISOString().split('T')[0],
+      history: Array.from({ length: 30 }, (_, i) => ({
+        date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
         status: 'operational',
         uptime_percentage: 100.0,
         avg_latency_ms: 42,

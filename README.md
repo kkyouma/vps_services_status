@@ -6,7 +6,7 @@
 
 ## 📸 Características
 
-- **Diseño Dark Minimalista**: Inspirado en el status page de Anthropic con línea de tiempo interactiva de 90 días, tooltips detallados y porcentaje de uptime.
+- **Diseño Dark Minimalista**: Inspirado en el status page de Anthropic con línea de tiempo interactiva de 30 días, tooltips detallados y porcentaje de uptime.
 - **Doble Interfaz**:
   - **CLI en Terminal**: Tablas con colores, métricas y latencias renderizadas con `rich` y `typer`.
   - **Web Estática**: Interfaz moderna en `Vue 3 + Vite + Tailwind CSS` alojable en **Cloudflare Pages** por $0/mes.
@@ -40,7 +40,7 @@ Edita el archivo `services.yaml` para apuntar a tus servicios reales:
 settings:
   title: "System Status"
   description: "Live operational status of VPS and Cloud infrastructure"
-  history_days: 90
+  history_days: 30
   output_dir: "web/public/data"
 
 ntfy:
@@ -80,14 +80,14 @@ services:
 # 1. Ejecutar chequeo instantáneo de servicios
 uv run state-panel check
 
-# 2. Ver historial agregado de uptime (últimos 90 días)
-uv run state-panel history --days 90
+# 2. Ver historial agregado de uptime (últimos 30 días)
+uv run state-panel history --days 30
 
 # 3. Generar datos y exportar a web/public/data/status.json
 uv run state-panel export
 
 # 4. Generar datos históricos simulados para previsualización inmediata
-uv run state-panel seed --days 90
+uv run state-panel seed --days 30
 
 # 5. Iniciar daemon en segundo plano (chequeo periódico)
 uv run state-panel daemon

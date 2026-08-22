@@ -148,9 +148,9 @@ def history(
     config_file: str | None = typer.Option(
         None, "--config", "-c", help="Path to YAML config file"
     ),
-    days: int = typer.Option(90, "--days", "-d", help="Number of history days"),
+    days: int = typer.Option(30, "--days", "-d", help="Number of history days"),
 ) -> None:
-    """Display 90-day uptime and availability summary table."""
+    """Display uptime and availability summary table."""
     config = load_config(config_file)
     engine = Engine(config)
 
@@ -167,7 +167,7 @@ def history(
 
     for srv in config.services:
         hist = engine.aggregator.get_service_history(srv.id, days=days)
-        uptime = hist["uptime_90d_percentage"]
+        uptime = hist["uptime_percentage"]
         uptime_style = (
             "bold green"
             if uptime >= 99.5
@@ -178,7 +178,7 @@ def history(
             srv.name,
             srv.category,
             Text(f"{uptime:.2f} %", style=uptime_style),
-            str(hist["total_checks_90d"]),
+            str(hist["total_checks"]),
         )
 
     console.print()
@@ -191,7 +191,7 @@ def seed(
     config_file: str | None = typer.Option(
         None, "--config", "-c", help="Path to YAML config file"
     ),
-    days: int = typer.Option(90, "--days", "-d", help="Number of history days to seed"),
+    days: int = typer.Option(30, "--days", "-d", help="Number of history days to seed"),
 ) -> None:
     """Seed realistic mock history data for instant previewing."""
     config = load_config(config_file)

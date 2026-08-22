@@ -57,10 +57,10 @@ function getStatusBadge(status) {
       </div>
     </div>
 
-    <!-- 90 Days Timeline -->
+    <!-- 30 Days Timeline -->
     <TimelineBars
       :history="service.history || []"
-      :uptime="service.uptime_90d_percentage || 100.0"
+      :uptime="service.uptime_30d_percentage ?? service.uptime_90d_percentage ?? 100.0"
     />
   </div>
 </template>

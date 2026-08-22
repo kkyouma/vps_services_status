@@ -37,27 +37,23 @@ const statusConfig = computed(() => {
     case 'operational':
       return {
         label: 'All Systems Operational',
-        bannerBg: 'bg-[#182315] border-[#294220] text-[#74b946]',
-        orbColor: 'bg-[#74b946]',
+        bannerBg: 'bg-[#18281a] border-[#27442a] text-[#48bb78]',
       }
     case 'degraded':
       return {
         label: 'Degraded System Performance',
-        bannerBg: 'bg-[#291f14] border-[#4d361d] text-[#e28725]',
-        orbColor: 'bg-[#e28725]',
+        bannerBg: 'bg-[#281f14] border-[#4a361c] text-[#f59e0b]',
       }
     case 'major_outage':
     case 'down':
       return {
         label: 'Major System Outage',
-        bannerBg: 'bg-[#2b1616] border-[#522424] text-[#d6453d]',
-        orbColor: 'bg-[#d6453d]',
+        bannerBg: 'bg-[#281717] border-[#4a2222] text-[#ef4444]',
       }
     default:
       return {
         label: 'System Status Unknown',
-        bannerBg: 'bg-[#1e1d1b] border-[#36342e] text-zinc-400',
-        orbColor: 'bg-zinc-400',
+        bannerBg: 'bg-[#1b1a18] border-[#2e2c28] text-zinc-400',
       }
   }
 })
@@ -77,7 +73,7 @@ const statusConfig = computed(() => {
       </div>
 
       <div class="flex items-center gap-3 self-end sm:self-auto text-xs text-[#8c8a82]">
-        <span>Uptime over the past 90 days.</span>
+        <span>Uptime over the past 30 days.</span>
         <button
           class="p-1.5 hover:bg-[#262522] rounded-md transition-colors text-[#a1a098] hover:text-white"
           :title="isLoading ? 'Refreshing...' : 'Refresh status'"
@@ -104,26 +100,14 @@ const statusConfig = computed(() => {
       </div>
     </div>
 
-    <!-- Main Overall Status Banner -->
+    <!-- Main Overall Status Banner (Flat pleasant background, no dot) -->
     <div
-      class="border rounded-lg px-5 py-4 flex items-center justify-between transition-colors shadow-sm"
+      class="border rounded-lg px-5 py-3.5 flex items-center justify-between transition-colors"
       :class="statusConfig.bannerBg"
     >
-      <div class="flex items-center gap-3">
-        <span class="relative flex h-3 w-3">
-          <span
-            class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-            :class="statusConfig.orbColor"
-          ></span>
-          <span
-            class="relative inline-flex rounded-full h-3 w-3"
-            :class="statusConfig.orbColor"
-          ></span>
-        </span>
-        <span class="font-semibold text-base sm:text-lg tracking-tight">
-          {{ statusConfig.label }}
-        </span>
-      </div>
+      <span class="font-semibold text-sm sm:text-base tracking-tight">
+        {{ statusConfig.label }}
+      </span>
 
       <div class="text-xs opacity-75 font-mono">
         Updated {{ formattedLastUpdated }}

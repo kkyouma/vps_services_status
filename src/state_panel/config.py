@@ -39,7 +39,7 @@ class PanelSettings(BaseModel):
     title: str = "System Status"
     description: str = "Live operational status of services and infrastructure"
     refresh_interval_seconds: int = 60
-    history_days: int = 90
+    history_days: int = 30
     output_dir: str = "web/public/data"
     db_path: str = "state_panel.db"
 
