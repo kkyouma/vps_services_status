@@ -20,32 +20,32 @@ ntfy:
 # Monitored Services
 services:
   # --- VPS SERVICES ---
-  - id: "hermes"
-    name: "Hermes"
-    category: "VPS Core"
-    type: "http"
-    target: "https://httpbin.org/status/200" # Cambiar a endpoint de Hermes (ej. https://hermes.midominio.com/health)
-    expected_status: 200
-    timeout: 5.0
-    description: "AI Agent Gateway & Workflow Dispatcher"
-
-  - id: "crm"
-    name: "CRM"
-    category: "VPS Core"
-    type: "http"
-    target: "https://httpbin.org/status/200" # Cambiar a endpoint del CRM (ej. https://crm.midominio.com)
-    expected_status: 200
-    timeout: 5.0
-    description: "Customer Relationship Management System"
-
   - id: "outline"
     name: "Outline"
     category: "VPS Core"
     type: "http"
-    target: "https://httpbin.org/status/200" # Cambiar a endpoint de Outline (ej. https://outline.midominio.com/api/health)
+    target: "https://mimamita.site"
     expected_status: 200
     timeout: 5.0
     description: "Internal Knowledge Base & Wiki"
+
+  # - id: "hermes"
+  #   name: "Hermes"
+  #   category: "VPS Core"
+  #   type: "http"
+  #   target: "https://hermes.example.com/health"
+  #   expected_status: 200
+  #   timeout: 5.0
+  #   description: "AI Agent Gateway & Workflow Dispatcher"
+
+  # - id: "crm"
+  #   name: "CRM"
+  #   category: "VPS Core"
+  #   type: "http"
+  #   target: "https://crm.example.com"
+  #   expected_status: 200
+  #   timeout: 5.0
+  #   description: "Customer Relationship Management System"
 
   # --- PLATAFORMAS EXTERNAS / CLOUD (EJEMPLOS ACTIVABLES) ---
   # - id: "supabase-db"
