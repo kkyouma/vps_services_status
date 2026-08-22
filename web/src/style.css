@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #121211;
+    color: #e5e5e5;
+  }
+}
+
+/* Custom Tooltip Styling */
+.tooltip-arrow {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: #1f1e1b;
+  border-right: 1px solid #36342e;
+  border-bottom: 1px solid #36342e;
+  rotate: 45deg;
+}
+
+/* Timeline bar transition */
+.timeline-bar {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.timeline-bar:hover {
+  transform: scaleY(1.18);
+  opacity: 0.9;
+}

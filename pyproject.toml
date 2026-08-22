@@ -1,0 +1,143 @@
+[project]
+name = "state-panel"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+  { name = "kkyouma", email = "144501527+kkyouma@users.noreply.github.com" },
+]
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+    "pydantic>=2.13.4",
+    "pyyaml>=6.0.3",
+    "rich>=15.0.0",
+    "typer>=0.27.1",
+]
+
+[project.scripts]
+state-panel = "state_panel:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "commitizen>=4.18.0",
+    "detect-secrets>=1.5.0",
+    "pre-commit>=4.6.2",
+    "ruff>=0.16.4",
+    "ty>=0.0.74",
+]
+
+[tool.ruff]
+line-length = 88
+src = ["src"]
+target-version = "py313"
+exclude = [
+  ".venv",
+  ".ruff_cache",
+  ".git",
+  "build",
+  "dist",
+  "__pycache__",
+  "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # Pyflakes
+  "I",    # isort
+  "UP",   # pyupgrade
+  "N",    # pep8-naming
+  "D",    # pydocstyle
+  "ANN",  # flake8-annotations
+  "A",    # flake8-builtins
+  "C4",   # flake8-comprehensions
+  "SIM",  # flake8-simplify
+  "PERF", # Perflint
+  "FURB", # refurb
+  "RUF",  # Ruff-specific
+  "PL",   # Pylint
+  "TRY",  # tryceratops
+  "BLE",  # flake8-blind-except
+  "S",    # flake8-bandit (security)
+  "COM",  # flake8-commas
+  "FAST", # fastAPI
+]
+
+ignore = [
+  # Docstrings — loosen restrictions based on project needs
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
+  "D400", # First line should end with a period
+
+  # Optional annotations
+  "ANN001",
+  "ANN002",
+  "ANN003",
+
+  # Common conflicts
+  "COM812", # Trailing comma (conflicts with formatter)
+  "ISC001", # Implicit string concatenation (conflicts with formatter)
+
+  # TRY — sometimes overly strict
+  "TRY003", # Avoid specifying long messages outside the exception class
+
+  # Pylint
+  # "PLR0913", # Too many arguments
+  "PLR2004", # Magic value comparison (noisy in thresholds)
+]
+
+fixable = ["ALL"]
+unfixable = [
+  "F841", # Local variable is assigned to but never used — better to review manually
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+split-on-trailing-comma = true
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.ruff.lint.flake8-builtins]
+builtins-ignorelist = ["id", "type", "input"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",
+  "ANN",
+  "D",
+] # In tests: asserts are OK, skip annotations and docstrings
+"scripts/**" = [
+  "D",
+  "ANN",
+  "T201",
+] # In scripts: allow print() and less formality
+"src/**/migrations/**" = ["ALL"] # Ignore auto-generated migrations
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+
+# TY (Type Checker)
+[tool.ty]
+
+[tool.ty.rules]
+possibly-unresolved-reference = "warn"
+unresolved-import = "warn"

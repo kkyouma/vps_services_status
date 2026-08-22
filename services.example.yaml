@@ -1,0 +1,45 @@
+# ==============================================================================
+# State Panel - Services Configuration Example
+# ==============================================================================
+
+settings:
+  title: "System Status"
+  description: "Live operational status of VPS and Cloud infrastructure"
+  refresh_interval_seconds: 60
+  history_days: 90
+  output_dir: "web/public/data"
+  db_path: "state_panel.db"
+
+ntfy:
+  enabled: false
+  server: "https://ntfy.sh"
+  topic: "my-state-panel-alerts"
+  priority: 4
+
+services:
+  - id: "hermes"
+    name: "Hermes"
+    category: "VPS Core"
+    type: "http"
+    target: "https://hermes.example.com/health"
+    expected_status: 200
+    timeout: 5.0
+    description: "AI Agent Gateway & Workflow Dispatcher"
+
+  - id: "crm"
+    name: "CRM"
+    category: "VPS Core"
+    type: "http"
+    target: "https://crm.example.com/health"
+    expected_status: 200
+    timeout: 5.0
+    description: "Customer Relationship Management System"
+
+  - id: "outline"
+    name: "Outline"
+    category: "VPS Core"
+    type: "http"
+    target: "https://outline.example.com/api/health"
+    expected_status: 200
+    timeout: 5.0
+    description: "Internal Knowledge Base & Wiki"

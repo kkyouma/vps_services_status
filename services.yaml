@@ -1,0 +1,67 @@
+# ==============================================================================
+# State Panel - Services Configuration
+# ==============================================================================
+
+settings:
+  title: "System Status"
+  description: "Live operational status of VPS and Cloud infrastructure"
+  refresh_interval_seconds: 60
+  history_days: 90
+  output_dir: "web/public/data"
+  db_path: "state_panel.db"
+
+# Notification settings (ntfy Pub/Sub)
+ntfy:
+  enabled: false
+  server: "https://ntfy.sh"
+  topic: "my-state-panel-alerts"
+  priority: 4 # 1 (min) to 5 (max)
+
+# Monitored Services
+services:
+  # --- VPS SERVICES ---
+  - id: "hermes"
+    name: "Hermes"
+    category: "VPS Core"
+    type: "http"
+    target: "https://httpbin.org/status/200" # Cambiar a endpoint de Hermes (ej. https://hermes.midominio.com/health)
+    expected_status: 200
+    timeout: 5.0
+    description: "AI Agent Gateway & Workflow Dispatcher"
+
+  - id: "crm"
+    name: "CRM"
+    category: "VPS Core"
+    type: "http"
+    target: "https://httpbin.org/status/200" # Cambiar a endpoint del CRM (ej. https://crm.midominio.com)
+    expected_status: 200
+    timeout: 5.0
+    description: "Customer Relationship Management System"
+
+  - id: "outline"
+    name: "Outline"
+    category: "VPS Core"
+    type: "http"
+    target: "https://httpbin.org/status/200" # Cambiar a endpoint de Outline (ej. https://outline.midominio.com/api/health)
+    expected_status: 200
+    timeout: 5.0
+    description: "Internal Knowledge Base & Wiki"
+
+  # --- PLATAFORMAS EXTERNAS / CLOUD (EJEMPLOS ACTIVABLES) ---
+  # - id: "supabase-db"
+  #   name: "Supabase DB"
+  #   category: "Cloud Services"
+  #   type: "tcp"
+  #   host: "db.xxx.supabase.co"
+  #   port: 5432
+  #   timeout: 5.0
+  #   description: "PostgreSQL Database & Auth"
+
+  # - id: "cloud-run-worker"
+  #   name: "Cloud Run Worker"
+  #   category: "Cloud Services"
+  #   type: "http"
+  #   target: "https://worker-xyz.a.run.app/health"
+  #   expected_status: 200
+  #   timeout: 5.0
+  #   description: "Background processing jobs"
