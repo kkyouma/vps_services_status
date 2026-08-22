@@ -9,6 +9,11 @@ wheels/
 *.db
 *.sqlite3
 
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
 # Node / Frontend
 node_modules/
 web/dist/

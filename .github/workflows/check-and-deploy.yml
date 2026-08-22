@@ -2,7 +2,7 @@ name: State Panel Health Check & Cloudflare Pages Deploy
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # Every 10 minutes
+    - cron: "*/10 * * * *" # Run health checks every 10 minutes
   workflow_dispatch: # Allow manual trigger
   push:
     branches:
@@ -24,6 +24,12 @@ jobs:
         run: uv python install 3.13
 
       - name: Run Health Checks and Export Data
+        env:
+          OUTLINE_URL: ${{ secrets.OUTLINE_URL }}
+          HERMES_URL: ${{ secrets.HERMES_URL }}
+          CRM_URL: ${{ secrets.CRM_URL }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
         run: |
           uv run state-panel export --output web/public/data/status.json
 
@@ -36,6 +42,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: "web/pnpm-lock.yaml"
 
       - name: Build Web Application
         working-directory: web

@@ -98,29 +98,52 @@ uv run state-panel daemon
 
 ---
 
-## 🌐 Desarrollo y Despliegue Web (Cloudflare Pages)
+---
 
-### Servidor de Desarrollo Local
+## 🌐 Desarrollo y Despliegue en Cloudflare Pages
 
-```bash
-cd web
-pnpm dev
-```
-
-### Compilar para Producción
+### 1. Desarrollo Local con Vite y Servidor en Vivo
 
 ```bash
-cd web
-pnpm build
+# Iniciar backend y API en vivo (puerto 8000)
+uv run state-panel serve --port 8000
+
+# En otra terminal: Iniciar frontend Vue con hot-reload (puerto 5173)
+cd web && pnpm dev
 ```
 
-El build estático se generará en `web/dist/`, listo para desplegarse en **Cloudflare Pages**.
+### 2. Despliegue a Cloudflare Pages
+
+El sitio web es **100% estático** y se despliega en **Cloudflare Pages** sin coste alguno:
+
+#### Opción A: Despliegue Automático con GitHub Actions (Recomendado)
+El repositorio incluye el workflow `.github/workflows/check-and-deploy.yml` que ejecuta los chequeos cada 10 minutos y despliega automáticamente a Cloudflare Pages.
+
+1. Añade los siguientes **Repository Secrets** en GitHub (`Settings` -> `Secrets and variables` -> `Actions`):
+   - `CLOUDFLARE_API_TOKEN`: Tu API Token de Cloudflare (con permisos de *Cloudflare Pages: Edit*).
+   - `CLOUDFLARE_ACCOUNT_ID`: Tu Account ID de Cloudflare.
+   - *(Opcional)* `OUTLINE_URL`, `HERMES_URL`, `CRM_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`.
+
+#### Opción B: Despliegue Manual con Wrangler
+```bash
+# Compilar frontend
+cd web && pnpm build && cd ..
+
+# Desplegar a Cloudflare Pages
+pnpm dlx wrangler pages deploy web/dist --project-name=state-panel
+```
+
+---
+
+## 🔐 Seguridad y Gestión de Secretos
+
+- **Variables de Entorno**: El archivo `services.yaml` soporta interpolación dinámica `${VAR:-default}`.
+- **Archivo `.env`**: Puedes copiar `.env.example` a `.env` para almacenar endpoints privados o tokens sin subirlos a Git (`.env` está ignorado en `.gitignore`).
+- **Auditoría de Seguridad**: El proyecto incluye `detect-secrets` y `pnpm audit` para evitar fuga de credenciales y dependencias vulnerables.
 
 ---
 
 ## 🔒 Pre-commits y Convención de Commits
-
-El repositorio incluye pre-commits configurados:
 
 ```bash
 # Instalar hooks de git
