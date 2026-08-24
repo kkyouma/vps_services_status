@@ -53,9 +53,9 @@ async function fetchStatus(triggerLiveCheck = false) {
       try {
         const res = await fetch('/api/status')
         const contentType = res.headers.get('content-type') || ''
-        if (res.ok && contentType.includes('application/json')) {
+        if (res.ok && (contentType.includes('application/json') || contentType.includes('text/json'))) {
           const parsed = await res.json()
-          if (parsed && Array.isArray(parsed.services)) {
+          if (parsed && Array.isArray(parsed.services) && parsed.services.length > 0) {
             data = parsed
           }
         }
@@ -64,14 +64,14 @@ async function fetchStatus(triggerLiveCheck = false) {
       }
     }
 
-    // 3. Fallback: Static ./data/status.json (for offline / local builds)
+    // 3. Fallback: Static ./data/status.json (for offline / local builds / fallback)
     if (!data) {
       try {
         const res = await fetch('./data/status.json?t=' + Date.now())
         const contentType = res.headers.get('content-type') || ''
-        if (res.ok && (contentType.includes('application/json') || contentType === '')) {
+        if (res.ok && (contentType.includes('application/json') || contentType === '' || contentType.includes('text/plain'))) {
           const parsed = await res.json()
-          if (parsed && Array.isArray(parsed.services)) {
+          if (parsed && Array.isArray(parsed.services) && parsed.services.length > 0) {
             data = parsed
           }
         }
