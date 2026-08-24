@@ -30,6 +30,15 @@ services:
     timeout: 5.0
     description: "Internal Knowledge Base & Wiki"
 
+  - id: "crm"
+    name: "CRM"
+    category: "VPS Core"
+    type: "http"
+    target: "${CRM_URL:-https://crm.mimamita.site}"
+    expected_status: 200
+    timeout: 5.0
+    description: "Customer Relationship Management System"
+
   # - id: "hermes"
   #   name: "Hermes"
   #   category: "VPS Core"
@@ -38,12 +47,3 @@ services:
   #   expected_status: 200
   #   timeout: 5.0
   #   description: "AI Agent Gateway & Workflow Dispatcher"
-
-  # - id: "crm"
-  #   name: "CRM"
-  #   category: "VPS Core"
-  #   type: "http"
-  #   target: "${CRM_URL:-https://crm.example.com}"
-  #   expected_status: 200
-  #   timeout: 5.0
-  #   description: "Customer Relationship Management System"

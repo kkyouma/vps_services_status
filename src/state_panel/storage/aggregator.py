@@ -1,4 +1,4 @@
-"""Historical aggregator for 90-day status timeline and uptime calculations."""
+"""Historical aggregator for 30-day status timeline and hourly metrics."""
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -6,8 +6,73 @@ from typing import Any
 from state_panel.storage.database import Database
 
 
+class HourMetric:
+    """Metric for a single hour (0..23) within a day."""
+
+    def __init__(self, hour: int) -> None:
+        self.hour = hour
+        self.total_checks = 0
+        self.operational_checks = 0
+        self.degraded_checks = 0
+        self.down_checks = 0
+        self.total_latency = 0.0
+        self.min_latency_ms: float | None = None
+        self.max_latency_ms: float | None = None
+
+    @property
+    def status(self) -> str:
+        """Worst status observed during the hour."""
+        if self.total_checks == 0:
+            return "nodata"
+        if self.down_checks > 0:
+            return "down"
+        if self.degraded_checks > 0:
+            return "degraded"
+        return "operational"
+
+    @property
+    def avg_latency_ms(self) -> float:
+        """Calculate average latency for the hour."""
+        if self.total_checks == 0:
+            return 0.0
+        return round(self.total_latency / self.total_checks, 2)
+
+    def add_check(self, status: str, latency_ms: float) -> None:
+        """Record a single check result in this hour."""
+        self.total_checks += 1
+        self.total_latency += latency_ms
+        if self.min_latency_ms is None or latency_ms < self.min_latency_ms:
+            self.min_latency_ms = round(latency_ms, 2)
+        if self.max_latency_ms is None or latency_ms > self.max_latency_ms:
+            self.max_latency_ms = round(latency_ms, 2)
+
+        if status == "operational":
+            self.operational_checks += 1
+        elif status == "degraded":
+            self.degraded_checks += 1
+        else:
+            self.down_checks += 1
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert hour metrics to dictionary format."""
+        return {
+            "hour": self.hour,
+            "status": self.status,
+            "avg_latency_ms": self.avg_latency_ms,
+            "min_latency_ms": (
+                self.min_latency_ms if self.min_latency_ms is not None else 0.0
+            ),
+            "max_latency_ms": (
+                self.max_latency_ms if self.max_latency_ms is not None else 0.0
+            ),
+            "checks_count": self.total_checks,
+            "down_checks": self.down_checks,
+            "degraded_checks": self.degraded_checks,
+        }
+
+
 class DayMetric:
-    """Metric for a single day in the history bar."""
+    """Metric for a single day in the history bar with hourly breakdown."""
 
     def __init__(self, date_str: str) -> None:
         self.date = date_str
@@ -16,6 +81,9 @@ class DayMetric:
         self.degraded_checks = 0
         self.down_checks = 0
         self.total_latency = 0.0
+        self.min_latency_ms: float | None = None
+        self.max_latency_ms: float | None = None
+        self.hours = [HourMetric(h) for h in range(24)]
 
     @property
     def status(self) -> str:
@@ -44,20 +112,53 @@ class DayMetric:
             return 0.0
         return round(self.total_latency / self.total_checks, 2)
 
+    def add_check(self, ts_str: str, status: str, latency_ms: float) -> None:
+        """Add check to day and appropriate hour metric."""
+        self.total_checks += 1
+        self.total_latency += latency_ms
+        if self.min_latency_ms is None or latency_ms < self.min_latency_ms:
+            self.min_latency_ms = round(latency_ms, 2)
+        if self.max_latency_ms is None or latency_ms > self.max_latency_ms:
+            self.max_latency_ms = round(latency_ms, 2)
+
+        if status == "operational":
+            self.operational_checks += 1
+        elif status == "degraded":
+            self.degraded_checks += 1
+        else:
+            self.down_checks += 1
+
+        # Determine hour (0..23)
+        try:
+            time_part = ts_str.split("T")[1] if "T" in ts_str else ts_str.split(" ")[1]
+            hour = int(time_part.split(":")[0])
+            if 0 <= hour <= 23:
+                self.hours[hour].add_check(status, latency_ms)
+        except (IndexError, ValueError):
+            pass
+
     def to_dict(self) -> dict[str, Any]:
+        """Convert day metrics to dictionary format."""
         return {
             "date": self.date,
             "status": self.status,
             "uptime_percentage": self.uptime_percentage,
             "avg_latency_ms": self.avg_latency_ms,
+            "min_latency_ms": (
+                self.min_latency_ms if self.min_latency_ms is not None else 0.0
+            ),
+            "max_latency_ms": (
+                self.max_latency_ms if self.max_latency_ms is not None else 0.0
+            ),
             "total_checks": self.total_checks,
             "down_checks": self.down_checks,
             "degraded_checks": self.degraded_checks,
+            "hours": [h.to_dict() for h in self.hours],
         }
 
 
 class Aggregator:
-    """Aggregates checks into 90-day timelines and overall uptime metrics."""
+    """Aggregates checks into 30-day timelines and overall uptime metrics."""
 
     def __init__(self, db: Database) -> None:
         self.db = db
@@ -81,23 +182,17 @@ class Aggregator:
         total_score_all = 0.0
 
         for check in checks:
-            # Parse timestamp date
             ts_str = check["timestamp"]
-            check_date = ts_str.split("T")[0]
+            check_date = ts_str.split("T")[0] if "T" in ts_str else ts_str.split(" ")[0]
             if check_date in day_map:
-                metric = day_map[check_date]
-                metric.total_checks += 1
-                metric.total_latency += check["latency_ms"]
-
                 st = check["status"]
+                lat = float(check["latency_ms"])
+                day_map[check_date].add_check(ts_str, st, lat)
+
                 if st == "operational":
-                    metric.operational_checks += 1
                     total_score_all += 1.0
                 elif st == "degraded":
-                    metric.degraded_checks += 1
                     total_score_all += 0.5
-                else:
-                    metric.down_checks += 1
 
         # Calculate overall uptime
         uptime_pct = (

@@ -114,23 +114,24 @@ cd web && pnpm dev
 
 ### 2. Despliegue a Cloudflare Pages
 
-El sitio web es **100% estático** y se despliega en **Cloudflare Pages** sin coste alguno:
+El sitio web es **100% estático** y se despliega en **Cloudflare Pages** (`startup-services-health`):
 
-#### Opción A: Despliegue Automático con GitHub Actions (Recomendado)
-El repositorio incluye el workflow `.github/workflows/check-and-deploy.yml` que ejecuta los chequeos cada 10 minutos y despliega automáticamente a Cloudflare Pages.
-
-1. Añade los siguientes **Repository Secrets** en GitHub (`Settings` -> `Secrets and variables` -> `Actions`):
-   - `CLOUDFLARE_API_TOKEN`: Tu API Token de Cloudflare (con permisos de *Cloudflare Pages: Edit*).
-   - `CLOUDFLARE_ACCOUNT_ID`: Tu Account ID de Cloudflare.
-   - *(Opcional)* `OUTLINE_URL`, `HERMES_URL`, `CRM_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`.
-
-#### Opción B: Despliegue Manual con Wrangler
+#### Opción A: Despliegue Directo con la CLI de State Panel (Recomendado)
 ```bash
-# Compilar frontend
-cd web && pnpm build && cd ..
+# Ejecuta chequeos, compila con Bun y despliega a Cloudflare Pages
+uv run state-panel deploy --project-name startup-services-health
+```
+
+#### Opción B: Despliegue Manual con Bun y Wrangler
+```bash
+# Exportar datos más recientes
+uv run state-panel export
+
+# Compilar frontend con Bun
+cd web && bun run build && cd ..
 
 # Desplegar a Cloudflare Pages
-pnpm dlx wrangler pages deploy web/dist --project-name=state-panel
+bunx wrangler pages deploy web/dist --project-name=startup-services-health
 ```
 
 ---

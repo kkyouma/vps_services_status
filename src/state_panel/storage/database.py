@@ -120,6 +120,20 @@ class Database:
             )
             return [dict(row) for row in cursor.fetchall()]
 
+    def prune_old_checks(self, days: int = 90) -> int:
+        """Delete check records older than N days to keep database lean."""
+        cutoff = (datetime.now(UTC) - timedelta(days=days)).isoformat()
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                DELETE FROM checks
+                WHERE timestamp < ?
+                """,
+                (cutoff,),
+            )
+            conn.commit()
+            return cursor.rowcount
+
     def seed_mock_history(
         self,
         service_configs: list[dict[str, str]],
@@ -170,6 +184,11 @@ class Database:
                 current_time += timedelta(hours=24 / checks_per_day)
 
         with self._get_connection() as conn:
+            for service in service_configs:
+                conn.execute(
+                    "DELETE FROM checks WHERE service_id = ?",
+                    (service["id"],),
+                )
             conn.executemany(
                 """
                 INSERT INTO checks (

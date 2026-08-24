@@ -1,5 +1,7 @@
 <script setup>
+import { ref } from 'vue'
 import TimelineBars from './TimelineBars.vue'
+import HourlyChart from './HourlyChart.vue'
 
 const props = defineProps({
   service: {
@@ -7,6 +9,16 @@ const props = defineProps({
     required: true
   }
 })
+
+const selectedDay = ref(null)
+
+function handleSelectDay(day) {
+  if (selectedDay.value?.date === day.date) {
+    selectedDay.value = null
+  } else {
+    selectedDay.value = day
+  }
+}
 
 function getStatusBadge(status) {
   switch (status) {
@@ -61,6 +73,16 @@ function getStatusBadge(status) {
     <TimelineBars
       :history="service.history || []"
       :uptime="service.uptime_30d_percentage ?? service.uptime_90d_percentage ?? 100.0"
+      :selected-date="selectedDay?.date"
+      @select-day="handleSelectDay"
+    />
+
+    <!-- Interactive 24h Hourly Detail Panel -->
+    <HourlyChart
+      v-if="selectedDay"
+      :day="selectedDay"
+      :service-name="service.name"
+      @close="selectedDay = null"
     />
   </div>
 </template>

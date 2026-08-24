@@ -11,8 +11,14 @@ const props = defineProps({
     type: Number,
     required: true,
     default: 100.0
+  },
+  selectedDate: {
+    type: String,
+    default: null
   }
 })
+
+const emit = defineEmits(['select-day'])
 
 const hoveredDay = ref(null)
 const tooltipX = ref(0)
@@ -20,13 +26,13 @@ const tooltipX = ref(0)
 function getBarColor(status) {
   switch (status) {
     case 'operational':
-      return 'bg-[#74b946]'
+      return 'bg-[#74b946] hover:bg-[#88d454]'
     case 'degraded':
-      return 'bg-[#e28725]'
+      return 'bg-[#e28725] hover:bg-[#f39838]'
     case 'down':
-      return 'bg-[#d6453d]'
+      return 'bg-[#d6453d] hover:bg-[#e85a52]'
     default:
-      return 'bg-[#2d2c27]'
+      return 'bg-[#2d2c27] hover:bg-[#3d3c36]'
   }
 }
 
@@ -51,6 +57,10 @@ function handleMouseEnter(day, event) {
 function handleMouseLeave() {
   hoveredDay.value = null
 }
+
+function handleBarClick(day) {
+  emit('select-day', day)
+}
 </script>
 
 <template>
@@ -58,7 +68,7 @@ function handleMouseLeave() {
     <!-- Tooltip -->
     <div
       v-if="hoveredDay"
-      class="absolute -top-16 z-30 transform -translate-x-1/2 bg-[#1f1e1b] border border-[#3a3832] text-xs rounded shadow-2xl px-3 py-1.5 pointer-events-none whitespace-nowrap"
+      class="absolute -top-20 z-30 transform -translate-x-1/2 bg-[#1f1e1b] border border-[#3a3832] text-xs rounded shadow-2xl px-3 py-1.5 pointer-events-none whitespace-nowrap"
       :style="{ left: `${tooltipX}px` }"
     >
       <div class="font-semibold text-white flex items-center gap-1.5">
@@ -81,6 +91,9 @@ function handleMouseLeave() {
           • {{ hoveredDay.down_checks }} incidents
         </span>
       </div>
+      <div class="text-[10px] text-emerald-400/90 mt-1 pt-1 border-t border-[#3a3832] flex items-center gap-1">
+        <span>Click to inspect 24h latency chart</span>
+      </div>
       <div class="tooltip-arrow"></div>
     </div>
 
@@ -89,8 +102,14 @@ function handleMouseLeave() {
       <div
         v-for="(day, index) in history"
         :key="day.date || index"
-        class="timeline-bar flex-1 h-full rounded-[2px] cursor-pointer"
-        :class="getBarColor(day.status)"
+        class="timeline-bar flex-1 h-full rounded-[2px] cursor-pointer transition-all duration-150 relative"
+        :class="[
+          getBarColor(day.status),
+          selectedDate === day.date
+            ? 'ring-2 ring-white scale-y-110 z-20 shadow-md shadow-black'
+            : 'opacity-90 hover:opacity-100 hover:scale-y-105'
+        ]"
+        @click="handleBarClick(day)"
         @mouseenter="handleMouseEnter(day, $event)"
         @mouseleave="handleMouseLeave"
       ></div>
