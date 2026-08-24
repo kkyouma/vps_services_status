@@ -421,7 +421,7 @@ const activeHour = computed(() => {
             <span class="text-[#737169]">(No checks recorded)</span>
           </template>
         </span>
-        <span v-else class="text-[#5a5852]">Hover points to inspect individual probes</span>
+        <span v-else></span>
       </div>
 
       <svg
@@ -525,37 +525,17 @@ const activeHour = computed(() => {
           stroke-linejoin="round"
         />
 
-        <!-- NOW Vertical Guide Line & Badge (Present time reference) -->
-        <g v-if="nowMarkerX !== null">
-          <line
-            :x1="nowMarkerX"
-            :y1="padTop"
-            :x2="nowMarkerX"
-            :y2="padTop + usableHeight"
-            stroke="#38bdf8"
-            stroke-width="1.5"
-            stroke-dasharray="3,3"
-          />
-          <rect
-            :x="nowMarkerX - 24"
-            :y="padTop - 14"
-            width="48"
-            height="13"
-            rx="3"
-            fill="#0369a1"
-          />
-          <text
-            :x="nowMarkerX"
-            :y="padTop - 5"
-            fill="#ffffff"
-            font-size="8.5"
-            font-weight="bold"
-            text-anchor="middle"
-            font-family="monospace"
-          >
-            NOW {{ currentLocalTime.timeStr }}
-          </text>
-        </g>
+        <!-- NOW Vertical Guide Line (Present time reference) -->
+        <line
+          v-if="nowMarkerX !== null"
+          :x1="nowMarkerX"
+          :y1="padTop"
+          :x2="nowMarkerX"
+          :y2="padTop + usableHeight"
+          stroke="#71717a"
+          stroke-width="1.5"
+          stroke-dasharray="3,3"
+        />
 
         <!-- Active Hovered Point Vertical Guide Line -->
         <line
@@ -637,7 +617,7 @@ const activeHour = computed(() => {
             activeHour && activeHour.hour === h.hour
               ? 'ring-1 ring-white scale-y-125 z-10 shadow-sm shadow-black'
               : 'hover:scale-y-110 hover:brightness-125',
-            isToday && currentLocalTime.hour === h.hour ? 'border-b-2 border-sky-400' : ''
+            isToday && currentLocalTime.hour === h.hour ? 'border-b-2 border-zinc-400' : ''
           ]"
           :title="`${formatHourLabel(h.hour)}: ${getStatusBadge(h.status).text} (${h.avg_latency_ms} ms avg, ${h.checks_count} checks)`"
           @mouseenter="hoveredHourIndex = h.hour"
@@ -646,7 +626,7 @@ const activeHour = computed(() => {
           <!-- Small indicator dot for current hour -->
           <div
             v-if="isToday && currentLocalTime.hour === h.hour"
-            class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-sky-400 rounded-full pointer-events-none"
+            class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-zinc-400 rounded-full pointer-events-none"
           ></div>
         </div>
       </div>
