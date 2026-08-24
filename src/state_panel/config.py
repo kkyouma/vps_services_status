@@ -33,7 +33,8 @@ def _expand_env_vars(text: str) -> str:
     def _replace(match: re.Match[str]) -> str:
         var_name = match.group(1)
         default_val = match.group(2) if match.group(2) is not None else ""
-        return os.environ.get(var_name, default_val)
+        val = os.environ.get(var_name)
+        return val or default_val
 
     return pattern.sub(_replace, text)
 

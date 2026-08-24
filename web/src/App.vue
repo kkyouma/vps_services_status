@@ -33,37 +33,61 @@ async function fetchStatus(triggerLiveCheck = false) {
   isLoading.value = true
   error.value = null
   try {
-    let res = null
+    let data = null
 
-    // If manual refresh was requested, attempt triggering live check on backend API
+    // 1. If manual live check was triggered, try POST /api/check
     if (triggerLiveCheck) {
       try {
-        res = await fetch('/api/check', { method: 'POST' })
+        const res = await fetch('/api/check', { method: 'POST' })
+        const contentType = res.headers.get('content-type') || ''
+        if (res.ok && contentType.includes('application/json')) {
+          data = await res.json()
+        }
       } catch {
-        res = null
+        data = null
       }
     }
 
-    // If live check wasn't triggered or failed (e.g. static Cloudflare Pages), fetch status.json
-    if (!res || !res.ok) {
+    // 2. Fetch static status.json (primary data source for Cloudflare Pages and local builds)
+    if (!data) {
       try {
-        res = await fetch('/api/status')
+        const res = await fetch('./data/status.json?t=' + Date.now())
+        const contentType = res.headers.get('content-type') || ''
+        // Ensure response is JSON and not SPA HTML fallback
+        if (res.ok && (contentType.includes('application/json') || contentType === '')) {
+          const parsed = await res.json()
+          if (parsed && Array.isArray(parsed.services)) {
+            data = parsed
+          }
+        }
       } catch {
-        res = null
+        data = null
       }
     }
 
-    if (!res || !res.ok) {
-      res = await fetch('./data/status.json?t=' + Date.now())
+    // 3. Fallback to GET /api/status if running with Python backend
+    if (!data) {
+      try {
+        const res = await fetch('/api/status')
+        const contentType = res.headers.get('content-type') || ''
+        if (res.ok && contentType.includes('application/json')) {
+          const parsed = await res.json()
+          if (parsed && Array.isArray(parsed.services)) {
+            data = parsed
+          }
+        }
+      } catch {
+        data = null
+      }
     }
 
-    if (!res.ok) {
-      throw new Error(`Failed to load status: ${res.statusText}`)
+    if (data) {
+      statusData.value = data
+    } else {
+      throw new Error('Failed to load valid status JSON')
     }
-    const data = await res.json()
-    statusData.value = data
   } catch (err) {
-    console.warn('Could not fetch /api or /data/status.json, using fallback/local state:', err)
+    console.warn('Could not fetch status data:', err)
     if (!statusData.value) {
       statusData.value = defaultFallback
     }
