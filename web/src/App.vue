@@ -20,76 +20,13 @@ if (
   )
 }
 
-// Fallback initial data in case status.json hasn't been generated yet
+// Fallback initial data structure (clean empty state while loading)
 const defaultFallback = {
   title: 'System Status',
   description: 'Live operational status of VPS and Cloud infrastructure',
   last_updated: new Date().toISOString(),
   overall_status: 'operational',
-  services: [
-    {
-      id: 'outline',
-      name: 'Outline',
-      category: 'VPS Core',
-      description: 'Internal Knowledge Base & Wiki',
-      current_status: 'operational',
-      current_latency_ms: 320,
-      current_message: 'HTTP 200',
-      uptime_30d_percentage: 100.0,
-      uptime_90d_percentage: 100.0,
-      history: Array.from({ length: 30 }, (_, i) => ({
-        date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
-        status: i === 29 ? 'operational' : 'nodata',
-        uptime_percentage: 100.0,
-        avg_latency_ms: i === 29 ? 320 : 0,
-        min_latency_ms: i === 29 ? 280 : 0,
-        max_latency_ms: i === 29 ? 360 : 0,
-        total_checks: i === 29 ? 24 : 0,
-        down_checks: 0,
-        hours: Array.from({ length: 24 }, (_, h) => ({
-          hour: h,
-          status: i === 29 ? 'operational' : 'nodata',
-          avg_latency_ms: i === 29 ? 300 + Math.round(Math.sin(h) * 40) : 0,
-          min_latency_ms: i === 29 ? 280 : 0,
-          max_latency_ms: i === 29 ? 360 : 0,
-          checks_count: i === 29 ? 1 : 0,
-          down_checks: 0,
-          degraded_checks: 0
-        }))
-      }))
-    },
-    {
-      id: 'crm',
-      name: 'CRM',
-      category: 'VPS Core',
-      description: 'Customer Relationship Management System',
-      current_status: 'operational',
-      current_latency_ms: 250,
-      current_message: 'HTTP 200',
-      uptime_30d_percentage: 100.0,
-      uptime_90d_percentage: 100.0,
-      history: Array.from({ length: 30 }, (_, i) => ({
-        date: new Date(Date.now() - (29 - i) * 86400000).toISOString().split('T')[0],
-        status: i === 29 ? 'operational' : 'nodata',
-        uptime_percentage: 100.0,
-        avg_latency_ms: i === 29 ? 250 : 0,
-        min_latency_ms: i === 29 ? 210 : 0,
-        max_latency_ms: i === 29 ? 290 : 0,
-        total_checks: i === 29 ? 24 : 0,
-        down_checks: 0,
-        hours: Array.from({ length: 24 }, (_, h) => ({
-          hour: h,
-          status: i === 29 ? 'operational' : 'nodata',
-          avg_latency_ms: i === 29 ? 240 + Math.round(Math.cos(h) * 30) : 0,
-          min_latency_ms: i === 29 ? 210 : 0,
-          max_latency_ms: i === 29 ? 290 : 0,
-          checks_count: i === 29 ? 1 : 0,
-          down_checks: 0,
-          degraded_checks: 0
-        }))
-      }))
-    }
-  ]
+  services: []
 }
 
 async function fetchStatus(triggerLiveCheck = false) {

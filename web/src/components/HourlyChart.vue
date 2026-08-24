@@ -106,9 +106,11 @@ const points = computed(() => {
   })
 })
 
-// SVG path generator
+// SVG path generator (only connects hours with recorded checks)
 const svgPath = computed(() => {
-  const pts = points.value.filter((p) => p.data.status !== 'nodata')
+  const pts = points.value.filter(
+    (p) => p.data.status !== 'nodata' && p.data.checks_count > 0
+  )
   if (pts.length === 0) return ''
   if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`
 
@@ -128,8 +130,10 @@ const svgPath = computed(() => {
 
 // SVG area generator (gradient fill)
 const svgArea = computed(() => {
-  const pts = points.value.filter((p) => p.data.status !== 'nodata')
-  if (pts.length === 0) return ''
+  const pts = points.value.filter(
+    (p) => p.data.status !== 'nodata' && p.data.checks_count > 0
+  )
+  if (pts.length <= 1) return ''
   const baseY = padTop + usableHeight
   const lineP = svgPath.value
   return `${lineP} L ${pts[pts.length - 1].x} ${baseY} L ${pts[0].x} ${baseY} Z`
@@ -226,8 +230,13 @@ function getStatusBadge(status) {
         </span>
         <span v-if="hoveredHour !== null" class="font-mono text-emerald-400">
           {{ formatHourLabel(hoveredHour.hour) }}:
-          <strong class="text-white">{{ hoveredHour.avg_latency_ms }} ms</strong>
-          ({{ getStatusBadge(hoveredHour.status).text }})
+          <template v-if="hoveredHour.checks_count > 0">
+            <strong class="text-white">{{ hoveredHour.avg_latency_ms }} ms</strong>
+            ({{ getStatusBadge(hoveredHour.status).text }})
+          </template>
+          <template v-else>
+            <span class="text-[#737169]">(No checks recorded yet)</span>
+          </template>
         </span>
         <span v-else class="text-[#5a5852]">Hover to inspect hour</span>
       </div>
@@ -381,7 +390,7 @@ function getStatusBadge(status) {
       <div class="text-[11px] text-[#737169] mb-1.5 flex items-center justify-between">
         <span>24h Status Strip (00:00 → 23:00)</span>
         <span v-if="hoveredHour" class="text-white font-mono text-[10px]">
-          {{ formatHourLabel(hoveredHour.hour) }}: {{ hoveredHour.checks_count }} checks
+          {{ formatHourLabel(hoveredHour.hour) }}: {{ hoveredHour.checks_count > 0 ? `${hoveredHour.checks_count} checks` : 'No checks' }}
         </span>
       </div>
       <div class="flex items-center gap-[2px] h-4 w-full">

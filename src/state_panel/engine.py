@@ -17,7 +17,11 @@ class Engine:
 
     def __init__(self, config: PanelConfig) -> None:
         self.config = config
-        self.db = Database(config.settings.db_path)
+        self.db = Database(
+            db_path=config.settings.db_path,
+            turso_url=config.settings.turso_url,
+            turso_token=config.settings.turso_token,
+        )
         self.aggregator = Aggregator(self.db)
         self.exporter = Exporter(self.config, self.aggregator)
         self.notifier = NtfyNotifier(self.config.ntfy)

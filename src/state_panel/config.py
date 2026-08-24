@@ -73,6 +73,8 @@ class PanelSettings(BaseModel):
     history_days: int = 30
     output_dir: str = "web/public/data"
     db_path: str = "state_panel.db"
+    turso_url: str | None = None
+    turso_token: str | None = None
 
 
 class PanelConfig(BaseModel):
@@ -107,7 +109,20 @@ def load_config(config_path: str | Path | None = None) -> PanelConfig:
 
             expanded_content = _expand_env_vars(content)
             raw_data: dict[str, Any] = yaml.safe_load(expanded_content) or {}
-            return PanelConfig(**raw_data)
+            config = PanelConfig(**raw_data)
+
+            # Populate Turso credentials from environment if not set in YAML
+            if not config.settings.turso_url:
+                config.settings.turso_url = os.environ.get("TURSO_DATABASE_URL")
+            if not config.settings.turso_token:
+                config.settings.turso_token = os.environ.get("TURSO_AUTH_TOKEN")
+
+            return config
 
     # Return default empty config if no file found
-    return PanelConfig()
+    config = PanelConfig()
+    if not config.settings.turso_url:
+        config.settings.turso_url = os.environ.get("TURSO_DATABASE_URL")
+    if not config.settings.turso_token:
+        config.settings.turso_token = os.environ.get("TURSO_AUTH_TOKEN")
+    return config

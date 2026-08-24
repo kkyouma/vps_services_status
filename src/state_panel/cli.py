@@ -4,7 +4,6 @@ import asyncio
 import shutil
 import subprocess
 from datetime import UTC, datetime
-from pathlib import Path
 
 import typer
 from rich.console import Console
@@ -260,12 +259,16 @@ def reset(
 ) -> None:
     """Reset the database and perform a fresh real check."""
     config = load_config(config_file)
-    db_path = Path(config.settings.db_path)
-    if db_path.exists():
-        db_path.unlink()
-        console.print(f"[bold yellow]Removed database:[/] {db_path}")
-
     engine = Engine(config)
+    engine.db.reset_db()
+
+    backend_name = (
+        f"Turso Cloud ({engine.db.turso_url})"
+        if engine.db.is_turso
+        else f"Local SQLite ({engine.db.db_path})"
+    )
+    console.print(f"[bold yellow]Reset database:[/] {backend_name}")
+
     with console.status("[bold green]Performing initial real health check...[/]"):
         results, out_path = asyncio.run(engine.run_and_export())
 
