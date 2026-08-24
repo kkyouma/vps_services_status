@@ -69,6 +69,9 @@ class Database:
             try:
                 client.execute(create_table_sql)
                 client.execute(create_index_sql)
+            except (libsql_client.LibsqlError, KeyError, RuntimeError):
+                # Silently proceed if table already exists or token is read-only
+                pass
             finally:
                 client.close()
         else:

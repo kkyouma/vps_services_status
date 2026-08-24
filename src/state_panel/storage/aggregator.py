@@ -18,17 +18,19 @@ class HourMetric:
         self.total_latency = 0.0
         self.min_latency_ms: float | None = None
         self.max_latency_ms: float | None = None
+        self.checks: list[dict[str, Any]] = []
 
     @property
     def status(self) -> str:
-        """Worst status observed during the hour."""
+        """Status observed during the hour based on down percentage."""
         if self.total_checks == 0:
             return "nodata"
-        if self.down_checks > 0:
+        if self.down_checks == 0 and self.degraded_checks == 0:
+            return "operational"
+        # If > 25% down checks -> down, otherwise degraded
+        if (self.down_checks / self.total_checks) > 0.25:
             return "down"
-        if self.degraded_checks > 0:
-            return "degraded"
-        return "operational"
+        return "degraded"
 
     @property
     def avg_latency_ms(self) -> float:
@@ -37,7 +39,14 @@ class HourMetric:
             return 0.0
         return round(self.total_latency / self.total_checks, 2)
 
-    def add_check(self, status: str, latency_ms: float) -> None:
+    def add_check(
+        self,
+        ts_str: str,
+        status: str,
+        latency_ms: float,
+        status_code: int | None = None,
+        message: str = "",
+    ) -> None:
         """Record a single check result in this hour."""
         self.total_checks += 1
         self.total_latency += latency_ms
@@ -52,6 +61,16 @@ class HourMetric:
             self.degraded_checks += 1
         else:
             self.down_checks += 1
+
+        self.checks.append(
+            {
+                "timestamp": ts_str,
+                "latency_ms": round(latency_ms, 2),
+                "status": status,
+                "status_code": status_code,
+                "message": message,
+            }
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert hour metrics to dictionary format."""
@@ -68,6 +87,7 @@ class HourMetric:
             "checks_count": self.total_checks,
             "down_checks": self.down_checks,
             "degraded_checks": self.degraded_checks,
+            "checks": self.checks,
         }
 
 
@@ -87,14 +107,14 @@ class DayMetric:
 
     @property
     def status(self) -> str:
-        """Worst status observed during the day."""
+        """Status observed during the day based on down percentage."""
         if self.total_checks == 0:
             return "nodata"
-        if self.down_checks > 0:
+        if self.down_checks == 0 and self.degraded_checks == 0:
+            return "operational"
+        if (self.down_checks / self.total_checks) > 0.25:
             return "down"
-        if self.degraded_checks > 0:
-            return "degraded"
-        return "operational"
+        return "degraded"
 
     @property
     def uptime_percentage(self) -> float:
@@ -112,7 +132,14 @@ class DayMetric:
             return 0.0
         return round(self.total_latency / self.total_checks, 2)
 
-    def add_check(self, ts_str: str, status: str, latency_ms: float) -> None:
+    def add_check(
+        self,
+        ts_str: str,
+        status: str,
+        latency_ms: float,
+        status_code: int | None = None,
+        message: str = "",
+    ) -> None:
         """Add check to day and appropriate hour metric."""
         self.total_checks += 1
         self.total_latency += latency_ms
@@ -133,7 +160,9 @@ class DayMetric:
             time_part = ts_str.split("T")[1] if "T" in ts_str else ts_str.split(" ")[1]
             hour = int(time_part.split(":")[0])
             if 0 <= hour <= 23:
-                self.hours[hour].add_check(status, latency_ms)
+                self.hours[hour].add_check(
+                    ts_str, status, latency_ms, status_code, message
+                )
         except (IndexError, ValueError):
             pass
 
@@ -187,7 +216,9 @@ class Aggregator:
             if check_date in day_map:
                 st = check["status"]
                 lat = float(check["latency_ms"])
-                day_map[check_date].add_check(ts_str, st, lat)
+                code = check.get("status_code")
+                msg = check.get("message") or ""
+                day_map[check_date].add_check(ts_str, st, lat, code, msg)
 
                 if st == "operational":
                     total_score_all += 1.0

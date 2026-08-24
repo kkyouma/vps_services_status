@@ -29,7 +29,12 @@ const emit = defineEmits(['refresh'])
 const formattedLastUpdated = computed(() => {
   if (!props.lastUpdated) return 'Checking...'
   const date = new Date(props.lastUpdated)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short'
+  })
 })
 
 const statusConfig = computed(() => {

@@ -38,12 +38,11 @@ function getBarColor(status) {
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
-  const date = new Date(dateStr + 'T00:00:00Z')
-  return date.toLocaleDateString('en-US', {
+  const date = new Date(dateStr + 'T12:00:00Z')
+  return date.toLocaleDateString([], {
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC'
+    year: 'numeric'
   })
 }
 

@@ -33,6 +33,7 @@ function aggregateChecks(rawRows, daysCount = 30) {
     const srvName = row[1]?.value;
     const status = row[2]?.value;
     const latency = Number(row[3]?.value) || 0;
+    const statusCode = row[4]?.value ? Number(row[4].value) : 200;
     const msg = row[5]?.value || 'HTTP 200';
     const ts = row[6]?.value;
 
@@ -44,7 +45,13 @@ function aggregateChecks(rawRows, daysCount = 30) {
         checks: []
       };
     }
-    checksByService[srvId].checks.push({ status, latency, msg, timestamp: ts });
+    checksByService[srvId].checks.push({
+      status,
+      latency,
+      status_code: statusCode,
+      msg,
+      timestamp: ts
+    });
   }
 
   // Ensure all configured services exist
@@ -90,7 +97,8 @@ function aggregateChecks(rawRows, daysCount = 30) {
           down_checks: 0,
           degraded_checks: 0,
           operational_checks: 0,
-          total_latency: 0.0
+          total_latency: 0.0,
+          checks: []
         }))
       };
     }
@@ -141,6 +149,14 @@ function aggregateChecks(rawRows, daysCount = 30) {
           if (c.status === 'operational') hMetric.operational_checks++;
           else if (c.status === 'degraded') hMetric.degraded_checks++;
           else hMetric.down_checks++;
+
+          hMetric.checks.push({
+            timestamp: c.timestamp,
+            latency_ms: Math.round(c.latency * 100) / 100,
+            status: c.status,
+            status_code: c.status_code,
+            message: c.msg
+          });
         }
       } catch (e) {}
     }
@@ -151,17 +167,25 @@ function aggregateChecks(rawRows, daysCount = 30) {
         day.avg_latency_ms = Math.round((day.total_latency / day.total_checks) * 100) / 100;
         const dayScore = day.operational_checks * 1.0 + day.degraded_checks * 0.5;
         day.uptime_percentage = Math.round((dayScore / day.total_checks) * 10000) / 100;
-        if (day.down_checks > 0) day.status = 'down';
-        else if (day.degraded_checks > 0) day.status = 'degraded';
-        else day.status = 'operational';
+        if (day.down_checks === 0 && day.degraded_checks === 0) {
+          day.status = 'operational';
+        } else if (day.down_checks / day.total_checks > 0.25) {
+          day.status = 'down';
+        } else {
+          day.status = 'degraded';
+        }
       }
 
       day.hours = day.hours.map((h) => {
         if (h.checks_count > 0) {
           h.avg_latency_ms = Math.round((h.total_latency / h.checks_count) * 100) / 100;
-          if (h.down_checks > 0) h.status = 'down';
-          else if (h.degraded_checks > 0) h.status = 'degraded';
-          else h.status = 'operational';
+          if (h.down_checks === 0 && h.degraded_checks === 0) {
+            h.status = 'operational';
+          } else if (h.down_checks / h.checks_count > 0.25) {
+            h.status = 'down';
+          } else {
+            h.status = 'degraded';
+          }
         }
         delete h.total_latency;
         delete h.operational_checks;
