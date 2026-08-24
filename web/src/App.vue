@@ -48,13 +48,12 @@ async function fetchStatus(triggerLiveCheck = false) {
       }
     }
 
-    // 2. Fetch static status.json (primary data source for Cloudflare Pages and local builds)
+    // 2. Primary: Cloudflare Pages Edge Function (/api/status)
     if (!data) {
       try {
-        const res = await fetch('./data/status.json?t=' + Date.now())
+        const res = await fetch('/api/status')
         const contentType = res.headers.get('content-type') || ''
-        // Ensure response is JSON and not SPA HTML fallback
-        if (res.ok && (contentType.includes('application/json') || contentType === '')) {
+        if (res.ok && contentType.includes('application/json')) {
           const parsed = await res.json()
           if (parsed && Array.isArray(parsed.services)) {
             data = parsed
@@ -65,12 +64,12 @@ async function fetchStatus(triggerLiveCheck = false) {
       }
     }
 
-    // 3. Fallback to GET /api/status if running with Python backend
+    // 3. Fallback: Static ./data/status.json (for offline / local builds)
     if (!data) {
       try {
-        const res = await fetch('/api/status')
+        const res = await fetch('./data/status.json?t=' + Date.now())
         const contentType = res.headers.get('content-type') || ''
-        if (res.ok && contentType.includes('application/json')) {
+        if (res.ok && (contentType.includes('application/json') || contentType === '')) {
           const parsed = await res.json()
           if (parsed && Array.isArray(parsed.services)) {
             data = parsed

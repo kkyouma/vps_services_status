@@ -1,39 +1,21 @@
-name: State Panel Health Check & Cloudflare Pages Deploy
+name: Deploy Web Dashboard (Cloudflare Pages)
 
 on:
-  schedule:
-    - cron: "*/10 * * * *" # Run health checks every 10 minutes
-  workflow_dispatch: # Allow manual trigger
   push:
     branches:
       - main
+    paths:
+      - "web/**"
+      - "functions/**"
+      - ".github/workflows/deploy-web.yml"
+  workflow_dispatch: # Allow manual deploy trigger
 
 jobs:
-  check-and-deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        run: uv python install 3.13
-
-      - name: Run Health Checks and Export Data
-        env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-          OUTLINE_URL: ${{ secrets.OUTLINE_URL }}
-          HERMES_URL: ${{ secrets.HERMES_URL }}
-          CRM_URL: ${{ secrets.CRM_URL }}
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
-        run: |
-          uv run state-panel export --output web/public/data/status.json
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
