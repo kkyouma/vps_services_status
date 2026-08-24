@@ -62,17 +62,96 @@ const currentLocalTime = computed(() => {
   }
 })
 
-// Ensure all 24 hour slots exist (0..23)
-const hoursData = computed(() => {
+// Extract all individual check points for granular visualization
+const allCheckRecords = computed(() => {
+  const list = []
   const rawHours = props.day?.hours || []
+  for (const h of rawHours) {
+    if (Array.isArray(h.checks) && h.checks.length > 0) {
+      for (const c of h.checks) {
+        list.push(c)
+      }
+    }
+  }
+  return list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+})
+
+// Timezone offset in hours (e.g., GMT-4 has +4 hours offset behind UTC)
+const tzOffsetHours = computed(() => {
+  return Math.round(new Date().getTimezoneOffset() / 60)
+})
+
+// Build 24 hour slots in USER LOCAL TIME (00:00 to 23:00 Local)
+const localHoursData = computed(() => {
   const result = []
-  for (let i = 0; i < 24; i++) {
-    const found = rawHours.find((h) => h.hour === i)
-    if (found) {
-      result.push(found)
+
+  // If we have granular check records: group directly by local hour
+  if (allCheckRecords.value.length > 0) {
+    for (let h = 0; h < 24; h++) {
+      const checksInHour = allCheckRecords.value.filter((c) => {
+        const d = new Date(c.timestamp)
+        return d.getHours() === h
+      })
+
+      if (checksInHour.length === 0) {
+        result.push({
+          hour: h,
+          status: 'nodata',
+          avg_latency_ms: 0,
+          min_latency_ms: 0,
+          max_latency_ms: 0,
+          checks_count: 0,
+          down_checks: 0,
+          degraded_checks: 0,
+          checks: []
+        })
+      } else {
+        const count = checksInHour.length
+        const totalLat = checksInHour.reduce((sum, c) => sum + (Number(c.latency_ms) || 0), 0)
+        const lats = checksInHour.map((c) => Number(c.latency_ms) || 0)
+        const downCount = checksInHour.filter((c) => c.status === 'down').length
+        const degradedCount = checksInHour.filter((c) => c.status === 'degraded').length
+
+        let status = 'operational'
+        if (downCount === 0 && degradedCount === 0) {
+          status = 'operational'
+        } else if (downCount / count > 0.25) {
+          status = 'down'
+        } else {
+          status = 'degraded'
+        }
+
+        result.push({
+          hour: h,
+          status,
+          avg_latency_ms: Math.round((totalLat / count) * 100) / 100,
+          min_latency_ms: Math.min(...lats),
+          max_latency_ms: Math.max(...lats),
+          checks_count: count,
+          down_checks: downCount,
+          degraded_checks: degradedCount,
+          checks: checksInHour
+        })
+      }
+    }
+    return result
+  }
+
+  // Fallback: If no granular checks array, convert backend UTC hour slots to local hours
+  const rawHours = props.day?.hours || []
+  const offset = tzOffsetHours.value
+  for (let localH = 0; localH < 24; localH++) {
+    // Local hour localH corresponds to UTC hour: (localH + offset + 24) % 24
+    const utcH = (localH + offset + 24) % 24
+    const found = rawHours.find((h) => h.hour === utcH)
+    if (found && found.checks_count > 0) {
+      result.push({
+        ...found,
+        hour: localH
+      })
     } else {
       result.push({
-        hour: i,
+        hour: localH,
         status: 'nodata',
         avg_latency_ms: 0,
         min_latency_ms: 0,
@@ -85,19 +164,6 @@ const hoursData = computed(() => {
     }
   }
   return result
-})
-
-// Extract all individual check points for granular visualization
-const allCheckRecords = computed(() => {
-  const list = []
-  for (const h of hoursData.value) {
-    if (Array.isArray(h.checks) && h.checks.length > 0) {
-      for (const c of h.checks) {
-        list.push(c)
-      }
-    }
-  }
-  return list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 })
 
 // Chart dimensions
@@ -117,7 +183,7 @@ const maxLatency = computed(() => {
     const lats = allCheckRecords.value.map((c) => Number(c.latency_ms) || 0)
     return Math.max(...lats, 50)
   }
-  const valid = hoursData.value
+  const valid = localHoursData.value
     .filter((h) => h.status !== 'nodata' && h.avg_latency_ms > 0)
     .map((h) => h.max_latency_ms || h.avg_latency_ms)
   return valid.length > 0 ? Math.max(...valid) : 50
@@ -134,7 +200,7 @@ const yCeil = computed(() => {
   return Math.ceil((maxVal * 1.25) / 100) * 100
 })
 
-// Mapped SVG coordinates for granular check points
+// Mapped SVG coordinates for granular check points in LOCAL TIME
 const checkPoints = computed(() => {
   if (allCheckRecords.value.length > 0) {
     return allCheckRecords.value.map((c, i) => {
@@ -166,8 +232,8 @@ const checkPoints = computed(() => {
     })
   }
 
-  // Fallback: hourly averages if checks array is empty
-  const activeHours = hoursData.value.filter((h) => h.status !== 'nodata' && h.checks_count > 0)
+  // Fallback: hourly averages in local time
+  const activeHours = localHoursData.value.filter((h) => h.status !== 'nodata' && h.checks_count > 0)
   return activeHours.map((h) => {
     const x = padLeft + ((h.hour + 0.5) / 24) * usableWidth
     const lat = h.avg_latency_ms
@@ -245,10 +311,10 @@ function getStatusBadge(status) {
 // Active hour for sync
 const activeHour = computed(() => {
   if (hoveredHourIndex.value !== null) {
-    return hoursData.value.find((h) => h.hour === hoveredHourIndex.value) || null
+    return localHoursData.value.find((h) => h.hour === hoveredHourIndex.value) || null
   }
   if (hoveredPoint.value) {
-    return hoursData.value.find((h) => h.hour === hoveredPoint.value.hourIndex) || null
+    return localHoursData.value.find((h) => h.hour === hoveredPoint.value.hourIndex) || null
   }
   return null
 })
@@ -503,7 +569,7 @@ const activeHour = computed(() => {
           stroke-dasharray="2,2"
         />
 
-        <!-- All Individual Data Point Dots -->
+        <!-- All Individual Data Point Dots in Local Time -->
         <g v-for="pt in checkPoints" :key="pt.id">
           <!-- Point circle dot -->
           <circle
@@ -547,11 +613,11 @@ const activeHour = computed(() => {
       </svg>
     </div>
 
-    <!-- 24-Hour Status Strip (Synced with Latency Chart) -->
+    <!-- 24-Hour Status Strip (Synced with Latency Chart in LOCAL TIME) -->
     <div class="mt-3">
       <div class="text-[11px] text-[#737169] mb-1.5 flex items-center justify-between">
         <span class="flex items-center gap-1.5">
-          <span>24h Hourly Strip (00:00 → 23:00)</span>
+          <span>24h Hourly Strip (00:00 → 23:00 Local)</span>
           <span class="text-[10px] text-[#5a5852]">• Colors: Green (0% down), Orange (&le;25% down), Red (&gt;25% down)</span>
         </span>
         <span v-if="activeHour" class="text-white font-mono text-[10px]">
@@ -560,10 +626,10 @@ const activeHour = computed(() => {
         </span>
       </div>
 
-      <!-- Strip Bars -->
+      <!-- Strip Bars in Local Time -->
       <div class="flex items-center gap-[2px] h-4 w-full">
         <div
-          v-for="h in hoursData"
+          v-for="h in localHoursData"
           :key="h.hour"
           class="flex-1 h-full rounded-[1px] cursor-pointer transition-all relative"
           :class="[
